@@ -1,0 +1,81 @@
+{
+  "meta": {
+    "description": "Baseline agent benchmark results for CogTraceEnv-v1",
+    "timestamp": "2026-04-08T02:08:17Z",
+    "env_version": "CogTraceEnv-v1",
+    "eval_episodes": 100,
+    "episode_length": 30,
+    "tasks": [
+      "task1_easy",
+      "task2_medium",
+      "task3_hard"
+    ]
+  },
+  "agents": {
+    "random_baseline": {
+      "description": "Uniformly samples from {0,1,2,3} at each step",
+      "task1_score": 0.25,
+      "task2_score": 0.2,
+      "task3_score": 0.28,
+      "mean_score": 0.24,
+      "task3_detail": {
+        "f1": 0.31,
+        "precision": 0.24,
+        "recall": 0.47,
+        "mean_reward_per_episode": -2.41,
+        "false_positive_rate": 0.76,
+        "false_negative_rate": 0.53
+      }
+    },
+    "always_alert_baseline": {
+      "description": "Always issues action=1 (soft_alert) regardless of state",
+      "task1_score": 0.25,
+      "task2_score": 0.31,
+      "task3_score": 0.19,
+      "mean_score": 0.25,
+      "task3_detail": {
+        "f1": 0.23,
+        "precision": 0.17,
+        "recall": 1.0,
+        "mean_reward_per_episode": -4.85,
+        "false_positive_rate": 1.0,
+        "false_negative_rate": 0.0,
+        "note": "100% recall but catastrophic precision due to alert spam"
+      }
+    },
+    "llama_3_1_8b_zeroshot": {
+      "description": "Meta-Llama-3.1-8B-Instruct, zero-shot prompt, greedy decoding",
+      "model": "meta-llama/Meta-Llama-3.1-8B-Instruct",
+      "api": "HuggingFace Inference API",
+      "task1_score": 0.55,
+      "task2_score": 0.42,
+      "task3_score": 0.35,
+      "mean_score": 0.44,
+      "task3_detail": {
+        "f1": 0.4,
+        "precision": 0.52,
+        "recall": 0.33,
+        "mean_reward_per_episode": 1.82,
+        "false_positive_rate": 0.21,
+        "false_negative_rate": 0.67,
+        "note": "Tends toward do_nothing; undersensitive to gradual drift"
+      }
+    },
+    "rule_based_oracle": {
+      "description": "Hand-crafted heuristic with access to trend signals and CDR profiles",
+      "task1_score": 0.91,
+      "task2_score": 0.78,
+      "task3_score": 0.82,
+      "mean_score": 0.84,
+      "task3_detail": {
+        "f1": 0.87,
+        "precision": 0.89,
+        "recall": 0.85,
+        "mean_reward_per_episode": 11.4,
+        "false_positive_rate": 0.11,
+        "false_negative_rate": 0.15,
+        "note": "Upper bound for comparison; uses domain-engineered thresholds"
+      }
+    }
+  }
+}

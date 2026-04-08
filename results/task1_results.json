@@ -1,0 +1,32 @@
+{
+  "meta": {
+    "task": "Task 1 \u2014 Cognitive Stage Classification (Easy)",
+    "description": "Single behavioral snapshot \u2192 CDR stage (0\u20134)",
+    "grading": "exact=1.0, off_by_1=0.50, off_by_2=0.20, off_by_3+=0.00",
+    "eval_episodes": 100,
+    "timestamp": "2026-04-08T02:08:17Z"
+  },
+  "results": {
+    "random_baseline": {
+      "score": 0.25,
+      "exact_acc": 0.21,
+      "off_by_1_acc": 0.39
+    },
+    "llama_3_1_8b_zeroshot": {
+      "score": 0.55,
+      "exact_acc": 0.41,
+      "off_by_1_acc": 0.73
+    },
+    "dqn_agent": {
+      "score": 0.62,
+      "exact_acc": 0.48,
+      "off_by_1_acc": 0.81,
+      "note": "DQN trained on Task 3 generalises to stage classification"
+    },
+    "rule_based_oracle": {
+      "score": 0.91,
+      "exact_acc": 0.84,
+      "off_by_1_acc": 0.96
+    }
+  }
+}

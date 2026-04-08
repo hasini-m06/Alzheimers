@@ -1,0 +1,38 @@
+{
+  "meta": {
+    "task": "Task 2 \u2014 Anomaly Timing Detection (Medium)",
+    "description": "7-day time series \u2192 first alert day closest to anomaly onset",
+    "grading": "exact=1.0, \u00b11d=0.75, \u00b12d=0.50, \u00b13d=0.25, else=0.00",
+    "eval_episodes": 100,
+    "timestamp": "2026-04-08T02:08:17Z"
+  },
+  "results": {
+    "random_baseline": {
+      "score": 0.2,
+      "exact_rate": 0.12,
+      "within_1d": 0.29
+    },
+    "always_alert_baseline": {
+      "score": 0.31,
+      "exact_rate": 0.14,
+      "within_1d": 0.38,
+      "note": "Always alerts day 1 \u2014 benefits if anomaly happens early"
+    },
+    "llama_3_1_8b_zeroshot": {
+      "score": 0.42,
+      "exact_rate": 0.24,
+      "within_1d": 0.51
+    },
+    "dqn_agent": {
+      "score": 0.58,
+      "exact_rate": 0.33,
+      "within_1d": 0.67,
+      "note": "7-day trend encoding helps pinpoint onset"
+    },
+    "rule_based_oracle": {
+      "score": 0.78,
+      "exact_rate": 0.59,
+      "within_1d": 0.84
+    }
+  }
+}
