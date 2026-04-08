@@ -19,8 +19,8 @@ import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
-from env.cognitive_env import CogTraceEnv
-from env.patient_simulator import PatientConfig, make_easy_patient
+from cognitive_env import CogTraceEnv
+from patient_simulator import PatientConfig, make_easy_patient
 
 
 TASK_ID   = "task1_easy"

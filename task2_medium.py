@@ -20,8 +20,8 @@ from typing import List, Dict, Any, Optional
 import sys, os
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
-from env.cognitive_env import CogTraceEnv
-from env.patient_simulator import PatientConfig, make_medium_patient
+from cognitive_env import CogTraceEnv
+from patient_simulator import PatientConfig, make_medium_patient
 
 
 TASK_ID    = "task2_medium"

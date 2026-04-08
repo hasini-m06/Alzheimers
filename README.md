@@ -5,6 +5,8 @@ colorFrom: blue
 colorTo: purple
 sdk: docker
 pinned: false
+tags:
+  - openenv
 ---
 # CogTraceEnv 🧠
 
