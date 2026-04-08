@@ -1,3 +1,11 @@
+---
+title: CogTraceEnv
+emoji: 🧠
+colorFrom: blue
+colorTo: purple
+sdk: docker
+pinned: false
+---
 # CogTraceEnv 🧠
 
 **An OpenEnv-compliant reinforcement learning benchmark for AI-driven Alzheimer's cognitive monitoring**
