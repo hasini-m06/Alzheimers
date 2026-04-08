@@ -13,10 +13,10 @@ from __future__ import annotations
 
 from typing import Optional, List, Tuple, Dict, Any
 
-from env.models import (
+from models import (
     Observation, Action, ActionType, Reward, StepInfo, EnvState
 )
-from env.patient_simulator import PatientSimulator, PatientConfig
+from patient_simulator import PatientSimulator, PatientConfig
 
 
 # ─── Reward constants ─────────────────────────────────────────────────────────
