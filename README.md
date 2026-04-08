@@ -121,6 +121,7 @@ See [`BENCHMARK.md`](BENCHMARK.md) for full results and analysis.
 | Random baseline | 0.25 | 0.20 | 0.28 | 0.24 |
 | Always-alert baseline | 0.25 | 0.31 | 0.19 | 0.25 |
 | Llama-3.1-8B (zero-shot) | 0.55 | 0.42 | 0.35 | 0.44 |
+| **DQN Agent (PyTorch, ours)** | **0.62** | **0.58** | **0.625** | **0.608** |
 | Rule-based oracle | **0.91** | **0.78** | **0.82** | **0.84** |
 
 ---
