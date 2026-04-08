@@ -1,0 +1,13 @@
+# stable_elderly.yaml
+# CDR 0 — Cognitively healthy elderly adult
+# Tests the agent's specificity: can it avoid false alarms for a patient
+# who is genuinely healthy? A high false-positive rate here would make
+# the system clinically unusable (alert fatigue).
+
+patient_id: "stable_elderly_001"
+true_stage: 0          # CDR 0 — no impairment
+episode_length: 30
+decline_rate: 0.0      # truly stable
+noise_level: 0.8       # slightly lower noise for a healthy, consistent person
+anomaly_duration: 0    # no anomaly — agent should predominantly do_nothing
+seed: 99

@@ -1,0 +1,13 @@
+# early_onset.yaml
+# CDR 0.5 — Very mild impairment
+# This is the hardest patient to detect. Signals are close to healthy baselines
+# with high noise. Tests whether the agent can avoid false positives while
+# remaining sensitive enough to catch genuine anomalies.
+
+patient_id: "early_onset_001"
+true_stage: 1          # CDR 0.5 → Stage 1
+episode_length: 30
+decline_rate: 0.005    # slow, realistic early progression
+noise_level: 1.3       # high noise — signals overlap with healthy range
+anomaly_duration: 4    # shorter anomaly window — harder to catch
+seed: 42

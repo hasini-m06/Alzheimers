@@ -1,0 +1,13 @@
+# rapid_decliner.yaml
+# CDR 1 → CDR 2 during episode (rapid progression)
+# Mimics a patient with accelerated Alzheimer's progression — e.g., following
+# a major life event or secondary health crisis. The agent must adapt to a
+# moving baseline rather than a static one.
+
+patient_id: "rapid_decliner_001"
+true_stage: 2          # CDR 1 → progressing toward CDR 2
+episode_length: 30
+decline_rate: 0.03     # fast drift: stage advances ~1 CDR level over 30 days
+noise_level: 1.0
+anomaly_duration: 6    # longer anomaly — ongoing crisis
+seed: 7
