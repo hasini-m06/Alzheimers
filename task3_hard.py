@@ -2,21 +2,6 @@
 task3_hard.py
 ─────────────
 Task 3 — Full Triage Episode (Hard)
-
-The agent manages a 30-step episode with:
-  - Gradual cognitive decline (drift rate 0.01/day)
-  - A 5-day acute anomaly window somewhere in the middle third
-  - Noisy signals (noise_level=1.2)
-
-Grading:
-  score = 0.70 × F1  +  0.30 × level_bonus
-
-  F1 is computed over anomaly-day alerts (any action > 0 during anomaly counts as TP).
-  level_bonus rewards proportional escalation:
-    escalate during anomaly       → +1.0 per step
-    medium_alert during anomaly   → +0.6
-    soft_alert during anomaly     → +0.3
-  (normalised to [0,1] over anomaly window length)
 """
 
 from __future__ import annotations
@@ -26,8 +11,6 @@ from typing import Callable, Dict, Any, List, Optional, Tuple
 from cognitive_env import CogTraceEnv
 from patient_simulator import PatientConfig
 
-
-# ── Grading helpers ───────────────────────────────────────────────────────────
 
 def _compute_f1(tp: int, fp: int, fn: int) -> float:
     precision = tp / (tp + fp) if (tp + fp) > 0 else 0.0
@@ -41,17 +24,14 @@ LEVEL_BONUS_MAP = {3: 1.0, 2: 0.6, 1: 0.3, 0: 0.0}
 
 
 def grade(results: List[Dict[str, Any]]) -> float:
-    """Average score across all seeds."""
     if not results:
-        return 0.0
-    return sum(r["score"] for r in results) / len(results)
+        return 0.001
+    score = sum(r["score"] for r in results) / len(results)
+    return max(0.001, min(0.999, score))
 
-
-# ── Environment builder ───────────────────────────────────────────────────────
 
 def build_env(seed: int = 0) -> CogTraceEnv:
-    """Build a Task 3 env: full 30-step episode with drift."""
-    stage = (seed % 4) + 1  # stages 1–4
+    stage = (seed % 4) + 1
     cfg = PatientConfig(
         true_stage=stage,
         episode_length=30,
@@ -65,20 +45,13 @@ def build_env(seed: int = 0) -> CogTraceEnv:
     return CogTraceEnv(config=cfg)
 
 
-# ── Episode runner ────────────────────────────────────────────────────────────
-
 def run_episode(
     env: CogTraceEnv,
     agent_fn: Callable[[Dict[str, Any], int, List[int]], int],
 ) -> Dict[str, Any]:
-    """
-    Run one Task 3 episode.
-
-    agent_fn(obs_dict, step, alert_history) → action (0–3)
-    """
     obs = env.reset()
     anomaly_start = env._sim.anomaly_day
-    anomaly_end   = env._sim.anomaly_end  # exclusive
+    anomaly_end   = env._sim.anomaly_end
 
     alert_history: List[int] = []
     step = 0
@@ -107,21 +80,20 @@ def run_episode(
         alert_history.append(action)
         obs, reward, done, info = env.step(action)
         step += 1
-
         if done:
             break
 
     f1          = _compute_f1(tp, fp, fn)
     level_bonus = (level_bonus_total / anomaly_steps) if anomaly_steps > 0 else 0.0
-    score       = round(0.70 * f1 + 0.30 * level_bonus, 4)
+    score       = max(0.001, min(0.999, round(0.70 * f1 + 0.30 * level_bonus, 4)))
 
     return {
-        "tp":        tp,
-        "fp":        fp,
-        "fn":        fn,
-        "f1_score":  round(f1, 4),
-        "level_bonus": round(level_bonus, 4),
-        "score":     score,
+        "tp":            tp,
+        "fp":            fp,
+        "fn":            fn,
+        "f1_score":      round(f1, 4),
+        "level_bonus":   round(level_bonus, 4),
+        "score":         score,
         "anomaly_start": anomaly_start,
         "anomaly_end":   anomaly_end,
     }
