@@ -1,16 +1,12 @@
-"""
-server/app.py
-─────────────
-Re-exports the root app for OpenEnv multi-mode deployment compliance.
-"""
-
 import sys
 import os
-
-# Ensure the repo root is on the path so imports resolve correctly
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from app import app, main  # noqa: F401
+from app import app
+
+def main():
+    import uvicorn
+    uvicorn.run("app:app", host="0.0.0.0", port=7860, reload=False)
 
 if __name__ == "__main__":
     main()
