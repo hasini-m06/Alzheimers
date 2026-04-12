@@ -1,0 +1,48 @@
+{
+  "task": "task3_hard",
+  "description": "Full 30-step triage episode with gradual decline + acute anomaly window",
+  "grading": "0.70 x F1 + 0.30 x level_bonus",
+  "seeds": 5,
+  "results": {
+    "random": {
+      "per_seed": [
+        {"seed": 0, "tp": 5, "fp": 19, "fn": 0, "f1_score": 0.34, "score": 0.41},
+        {"seed": 1, "tp": 4, "fp": 17, "fn": 1, "f1_score": 0.31, "score": 0.35},
+        {"seed": 2, "tp": 4, "fp": 18, "fn": 1, "f1_score": 0.30, "score": 0.34},
+        {"seed": 3, "tp": 3, "fp": 15, "fn": 2, "f1_score": 0.26, "score": 0.30},
+        {"seed": 4, "tp": 3, "fp": 15, "fn": 2, "f1_score": 0.26, "score": 0.28}
+      ],
+      "mean_score": 0.3343
+    },
+    "always_alert": {
+      "per_seed": [
+        {"seed": 0, "tp": 5, "fp": 25, "fn": 0, "f1_score": 0.29, "score": 0.50},
+        {"seed": 1, "tp": 5, "fp": 25, "fn": 0, "f1_score": 0.29, "score": 0.50},
+        {"seed": 2, "tp": 5, "fp": 25, "fn": 0, "f1_score": 0.29, "score": 0.50},
+        {"seed": 3, "tp": 5, "fp": 25, "fn": 0, "f1_score": 0.29, "score": 0.50},
+        {"seed": 4, "tp": 5, "fp": 25, "fn": 0, "f1_score": 0.29, "score": 0.50}
+      ],
+      "mean_score": 0.5000
+    },
+    "oracle": {
+      "per_seed": [
+        {"seed": 0, "tp": 2, "fp": 1, "fn": 3, "f1_score": 0.50, "score": 0.47},
+        {"seed": 1, "tp": 2, "fp": 6, "fn": 3, "f1_score": 0.31, "score": 0.31},
+        {"seed": 2, "tp": 2, "fp": 8, "fn": 3, "f1_score": 0.27, "score": 0.26},
+        {"seed": 3, "tp": 2, "fp": 8, "fn": 3, "f1_score": 0.27, "score": 0.26},
+        {"seed": 4, "tp": 2, "fp": 3, "fn": 3, "f1_score": 0.40, "score": 0.38}
+      ],
+      "mean_score": 0.3350
+    },
+    "dqn": {
+      "per_seed": [
+        {"seed": 0, "tp": 5, "fp": 0, "fn": 0, "f1_score": 1.00, "score": 1.00},
+        {"seed": 1, "tp": 5, "fp": 2, "fn": 0, "f1_score": 0.83, "score": 0.88},
+        {"seed": 2, "tp": 5, "fp": 3, "fn": 0, "f1_score": 0.77, "score": 0.84},
+        {"seed": 3, "tp": 5, "fp": 2, "fn": 0, "f1_score": 0.83, "score": 0.88},
+        {"seed": 4, "tp": 5, "fp": 0, "fn": 0, "f1_score": 1.00, "score": 1.00}
+      ],
+      "mean_score": 0.9210
+    }
+  }
+}

@@ -1,0 +1,1183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CogTraceEnv — Alzheimer's Monitoring RL Environment</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --purple: #7B5EA7;
+    --purple-light: #B39DDB;
+    --purple-dark: #4A3570;
+    --pink: #E8A0BF;
+    --pink-light: #F4C8DC;
+    --blue: #6BAED6;
+    --blue-light: #AED6F1;
+    --cream: #FAF8F5;
+    --dark: #1A1525;
+    --dark2: #2D2440;
+    --text: #2C1F3E;
+    --text-muted: #7A6B8A;
+    --border: rgba(123,94,167,0.2);
+    --glow-purple: rgba(123,94,167,0.3);
+    --glow-pink: rgba(232,160,191,0.3);
+    --glow-blue: rgba(107,174,214,0.3);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Outfit', sans-serif;
+    background: var(--cream);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  .bg-orbs {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+  }
+  .orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.18;
+    animation: drift 12s ease-in-out infinite;
+  }
+  .orb1 { width: 500px; height: 500px; background: var(--purple); top: -100px; left: -100px; animation-delay: 0s; }
+  .orb2 { width: 400px; height: 400px; background: var(--pink); top: 20%; right: -80px; animation-delay: -4s; }
+  .orb3 { width: 350px; height: 350px; background: var(--blue); bottom: 10%; left: 20%; animation-delay: -8s; }
+  .orb4 { width: 300px; height: 300px; background: var(--purple-light); bottom: -50px; right: 30%; animation-delay: -2s; }
+
+  @keyframes drift {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    33% { transform: translate(30px, -20px) scale(1.05); }
+    66% { transform: translate(-20px, 30px) scale(0.95); }
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 20px;
+  }
+
+  header {
+    padding: 48px 0 32px;
+    text-align: center;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(123,94,167,0.1);
+    border: 1px solid var(--border);
+    border-radius: 99px;
+    padding: 4px 14px;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--purple);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+  .badge-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--purple);
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+  h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(32px, 7vw, 64px);
+    line-height: 1.1;
+    background: linear-gradient(135deg, var(--purple-dark) 0%, var(--purple) 40%, var(--pink) 70%, var(--blue) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 14px;
+  }
+
+  .subtitle {
+    font-size: clamp(14px, 3vw, 17px);
+    color: var(--text-muted);
+    max-width: 560px;
+    margin: 0 auto 32px;
+    line-height: 1.6;
+    font-weight: 300;
+  }
+
+  /* API mode badge */
+  .api-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(80,180,80,0.1);
+    border: 1px solid rgba(80,180,80,0.3);
+    border-radius: 99px;
+    padding: 4px 14px;
+    font-size: 11px;
+    font-weight: 500;
+    color: #2E8B4A;
+    letter-spacing: 0.06em;
+    margin-bottom: 20px;
+  }
+  .api-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: #2E8B4A;
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+
+  .stage-row {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 40px;
+  }
+  .stage-pill {
+    padding: 6px 16px;
+    border-radius: 99px;
+    font-size: 12px;
+    font-weight: 500;
+    border: 1px solid;
+    cursor: default;
+  }
+  .stage-0 { background: rgba(107,174,214,0.12); color: #2C7BB6; border-color: rgba(107,174,214,0.4); }
+  .stage-1 { background: rgba(123,94,167,0.12); color: var(--purple); border-color: var(--border); }
+  .stage-2 { background: rgba(232,160,191,0.15); color: #C0607A; border-color: rgba(232,160,191,0.4); }
+  .stage-3 { background: rgba(230,120,80,0.12); color: #C05428; border-color: rgba(230,120,80,0.3); }
+  .stage-4 { background: rgba(180,60,60,0.12); color: #A03030; border-color: rgba(180,60,60,0.3); }
+
+  .card {
+    background: rgba(255,255,255,0.72);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.8);
+    border-radius: 20px;
+    padding: clamp(20px, 5vw, 36px);
+    box-shadow: 0 4px 40px rgba(123,94,167,0.08), 0 1px 4px rgba(0,0,0,0.04);
+    margin-bottom: 20px;
+  }
+
+  .card-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(18px, 4vw, 24px);
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+  .card-sub {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 24px;
+    font-weight: 300;
+  }
+
+  .controls {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 24px;
+  }
+  @media (max-width: 500px) { .controls { grid-template-columns: 1fr; } }
+
+  .control-group label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+  }
+
+  select, input[type=range] {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: rgba(255,255,255,0.8);
+    font-family: 'Outfit', sans-serif;
+    font-size: 14px;
+    color: var(--text);
+    appearance: none;
+    -webkit-appearance: none;
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  select:focus, input:focus {
+    border-color: var(--purple);
+    box-shadow: 0 0 0 3px var(--glow-purple);
+  }
+  .select-wrap { position: relative; }
+  .select-wrap::after {
+    content: '▾';
+    position: absolute;
+    right: 12px; top: 50%;
+    transform: translateY(-50%);
+    color: var(--purple);
+    pointer-events: none;
+    font-size: 12px;
+  }
+
+  input[type=range] {
+    padding: 4px 0;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+  }
+  input[type=range]::-webkit-slider-runnable-track {
+    height: 4px;
+    border-radius: 2px;
+    background: linear-gradient(to right, var(--purple), var(--pink));
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: white;
+    border: 2px solid var(--purple);
+    margin-top: -7px;
+    box-shadow: 0 2px 8px var(--glow-purple);
+  }
+  .range-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+
+  .btn-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .btn {
+    flex: 1;
+    min-width: 120px;
+    padding: 13px 20px;
+    border-radius: 12px;
+    border: none;
+    font-family: 'Outfit', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--purple), var(--purple-dark));
+    color: white;
+    box-shadow: 0 4px 20px var(--glow-purple);
+  }
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 28px var(--glow-purple); }
+  .btn-primary:active { transform: translateY(0); }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  .btn-ghost {
+    background: rgba(123,94,167,0.08);
+    color: var(--purple);
+    border: 1px solid var(--border);
+  }
+  .btn-ghost:hover { background: rgba(123,94,167,0.14); }
+  .btn-ghost:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* Loading spinner */
+  .spinner {
+    display: none;
+    width: 16px; height: 16px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading .spinner { display: block; }
+  .loading .btn-text { display: none; }
+
+  /* Error toast */
+  .error-toast {
+    display: none;
+    padding: 10px 16px;
+    border-radius: 10px;
+    background: rgba(200,60,60,0.12);
+    border: 1px solid rgba(200,60,60,0.3);
+    font-size: 13px;
+    color: #A03030;
+    margin-bottom: 16px;
+  }
+  .error-toast.visible { display: block; }
+
+  .timeline-wrap {
+    overflow-x: auto;
+    padding-bottom: 8px;
+    margin-bottom: 8px;
+    -webkit-overflow-scrolling: touch;
+  }
+  .timeline {
+    display: flex;
+    gap: 4px;
+    min-width: max-content;
+    padding: 4px 0;
+  }
+  .day-dot {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 2px solid rgba(123,94,167,0.2);
+    background: rgba(255,255,255,0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 8px;
+    font-weight: 600;
+    color: var(--text-muted);
+    position: relative;
+    cursor: pointer;
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+  .day-dot.current {
+    border-color: var(--purple);
+    background: var(--purple);
+    color: white;
+    box-shadow: 0 0 12px var(--glow-purple);
+    transform: scale(1.15);
+  }
+  .day-dot.done { border-color: rgba(123,94,167,0.3); background: rgba(123,94,167,0.08); }
+  .day-dot.anomaly-true { border-color: #E8A0BF !important; }
+  .day-dot.action-alert::after {
+    content: '';
+    position: absolute;
+    top: -4px; right: -4px;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--pink);
+    border: 1px solid white;
+  }
+  .day-dot.action-escalate::after { background: #E05050; }
+  .timeline-labels {
+    display: flex;
+    gap: 4px;
+    min-width: max-content;
+  }
+  .day-label {
+    width: 28px;
+    text-align: center;
+    font-size: 7px;
+    color: var(--text-muted);
+    flex-shrink: 0;
+  }
+
+  .sensors-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .sensor {
+    background: rgba(255,255,255,0.6);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px;
+    transition: all 0.3s;
+  }
+  .sensor.spiking {
+    border-color: var(--pink);
+    background: rgba(232,160,191,0.08);
+    box-shadow: 0 0 16px var(--glow-pink);
+    animation: spike-pulse 0.6s ease;
+  }
+  @keyframes spike-pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.02); }
+    100% { transform: scale(1); }
+  }
+
+  .sensor-icon { font-size: 20px; margin-bottom: 6px; }
+  .sensor-name {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+  }
+  .sensor-value {
+    font-family: 'DM Mono', monospace;
+    font-size: 20px;
+    font-weight: 500;
+    color: var(--text);
+    line-height: 1;
+  }
+  .sensor-unit { font-size: 11px; color: var(--text-muted); }
+
+  .sensor-bar-track {
+    height: 4px;
+    border-radius: 2px;
+    background: rgba(123,94,167,0.1);
+    margin-top: 8px;
+    overflow: hidden;
+  }
+  .sensor-bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .action-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  @media (max-width: 400px) { .action-grid { grid-template-columns: 1fr; } }
+
+  .action-btn {
+    padding: 14px 12px;
+    border-radius: 14px;
+    border: 2px solid;
+    cursor: pointer;
+    font-family: 'Outfit', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.18s;
+    text-align: left;
+    background: rgba(255,255,255,0.6);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .action-btn:hover { transform: translateY(-2px); }
+  .action-btn:active { transform: translateY(0); }
+  .action-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+  .action-btn .action-label { font-weight: 600; font-size: 14px; }
+  .action-btn .action-desc { font-size: 11px; opacity: 0.7; }
+
+  .action-0 { border-color: rgba(107,174,214,0.4); color: #2C7BB6; }
+  .action-0:hover { background: rgba(107,174,214,0.1); border-color: var(--blue); }
+  .action-1 { border-color: rgba(123,94,167,0.4); color: var(--purple); }
+  .action-1:hover { background: rgba(123,94,167,0.08); border-color: var(--purple); }
+  .action-2 { border-color: rgba(232,160,191,0.5); color: #C0607A; }
+  .action-2:hover { background: rgba(232,160,191,0.1); border-color: var(--pink); }
+  .action-3 { border-color: rgba(200,60,60,0.4); color: #A03030; }
+  .action-3:hover { background: rgba(200,60,60,0.08); border-color: #C04040; }
+
+  .reward-display {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 18px;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.5);
+    border: 1px solid var(--border);
+    margin-bottom: 16px;
+    min-height: 52px;
+    transition: all 0.3s;
+  }
+  .reward-display.positive { border-color: rgba(80,160,80,0.4); background: rgba(80,180,80,0.06); }
+  .reward-display.negative { border-color: rgba(200,60,60,0.4); background: rgba(200,60,60,0.06); }
+
+  .reward-val {
+    font-family: 'DM Mono', monospace;
+    font-size: 26px;
+    font-weight: 500;
+    min-width: 80px;
+  }
+  .reward-val.pos { color: #2E8B4A; }
+  .reward-val.neg { color: #C04040; }
+  .reward-reason { font-size: 12px; color: var(--text-muted); line-height: 1.4; }
+
+  .score-section { margin-bottom: 16px; }
+  .score-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 6px;
+  }
+  .score-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); }
+  .score-number {
+    font-family: 'DM Mono', monospace;
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--purple);
+  }
+  .score-track {
+    height: 8px;
+    border-radius: 4px;
+    background: rgba(123,94,167,0.1);
+    overflow: hidden;
+  }
+  .score-fill {
+    height: 100%;
+    border-radius: 4px;
+    background: linear-gradient(to right, var(--purple), var(--pink));
+    transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 0 8px var(--glow-purple);
+  }
+
+  .anomaly-banner {
+    display: none;
+    padding: 10px 16px;
+    border-radius: 10px;
+    background: rgba(232,160,191,0.15);
+    border: 1px solid rgba(232,160,191,0.5);
+    font-size: 13px;
+    font-weight: 500;
+    color: #A04060;
+    margin-bottom: 14px;
+    align-items: center;
+    gap: 8px;
+    animation: fadein 0.3s ease;
+  }
+  .anomaly-banner.visible { display: flex; }
+  @keyframes fadein { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+  .anomaly-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--pink); animation: pulse 1s ease-in-out infinite; }
+
+  .done-overlay {
+    display: none;
+    text-align: center;
+    padding: 32px 20px;
+  }
+  .done-overlay.visible { display: block; }
+  .done-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 28px;
+    background: linear-gradient(135deg, var(--purple), var(--pink));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 8px;
+  }
+  .done-scores {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin: 20px 0;
+  }
+  .done-score-item {
+    background: rgba(255,255,255,0.7);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 20px;
+    text-align: center;
+  }
+  .done-score-val {
+    font-family: 'DM Mono', monospace;
+    font-size: 28px;
+    font-weight: 500;
+    color: var(--purple);
+  }
+  .done-score-lbl { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 2px; }
+
+  .info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 14px;
+    margin-top: 8px;
+  }
+  .info-item {
+    padding: 16px;
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    background: rgba(255,255,255,0.5);
+  }
+  .info-icon { font-size: 22px; margin-bottom: 8px; }
+  .info-title { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+  .info-text { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+
+  .legend {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 6px;
+  }
+  .legend-item { display: flex; align-items: center; gap: 5px; }
+  .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+  .step-counter {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    color: var(--text-muted);
+    text-align: right;
+    margin-bottom: 8px;
+  }
+  .step-counter span { color: var(--purple); font-weight: 500; }
+
+  footer {
+    text-align: center;
+    padding: 32px 20px 48px;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+  footer a { color: var(--purple); text-decoration: none; }
+
+  .reveal {
+    opacity: 0;
+    transform: translateY(20px);
+    animation: reveal 0.6s ease forwards;
+  }
+  .reveal:nth-child(1) { animation-delay: 0.1s; }
+  .reveal:nth-child(2) { animation-delay: 0.2s; }
+  .reveal:nth-child(3) { animation-delay: 0.3s; }
+  .reveal:nth-child(4) { animation-delay: 0.4s; }
+  @keyframes reveal {
+    to { opacity: 1; transform: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="bg-orbs">
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+  <div class="orb orb3"></div>
+  <div class="orb orb4"></div>
+</div>
+
+<div class="container">
+
+  <header>
+    <div class="api-badge">
+      <div class="api-dot"></div>
+                          
+    </div>
+    <h1>CogTrace<br>Env</h1>
+    <p class="subtitle">An RL training environment for AI agents that monitor Alzheimer's patients. Watch the agent decide when to raise a clinical alert — day by day.</p>
+    <div class="stage-row">
+      <span class="stage-pill stage-0">0 · Healthy</span>
+      <span class="stage-pill stage-1">1 · Very Mild</span>
+      <span class="stage-pill stage-2">2 · Mild</span>
+      <span class="stage-pill stage-3">3 · Moderate</span>
+      <span class="stage-pill stage-4">4 · Severe</span>
+    </div>
+  </header>
+
+  <!-- SETUP CARD -->
+  <div class="card reveal" id="setup-card">
+    <div class="card-title">Configure Patient</div>
+    <div class="card-sub">Choose a patient profile then step through 30 days of monitoring</div>
+
+    <div id="error-toast" class="error-toast"></div>
+
+    <div class="controls">
+      <div class="control-group">
+        <label>CDR Stage</label>
+        <div class="select-wrap">
+          <select id="stage-select">
+            <option value="0">Stage 0 — Healthy</option>
+            <option value="1">Stage 1 — Very Mild</option>
+            <option value="2" selected>Stage 2 — Mild</option>
+            <option value="3">Stage 3 — Moderate</option>
+            <option value="4">Stage 4 — Severe</option>
+          </select>
+        </div>
+      </div>
+      <div class="control-group">
+        <label>Patient Seed</label>
+        <div class="select-wrap">
+          <select id="seed-select">
+            <option value="0">Patient A (seed 0)</option>
+            <option value="1">Patient B (seed 1)</option>
+            <option value="2">Patient C (seed 2)</option>
+            <option value="42">Patient D (seed 42)</option>
+            <option value="99">Patient E (seed 99)</option>
+          </select>
+        </div>
+      </div>
+      <div class="control-group">
+        <label>Noise Level — <span id="noise-val">1.0</span>×</label>
+        <input type="range" id="noise-slider" min="0.2" max="2.0" step="0.1" value="1.0">
+        <div class="range-labels"><span>Easy</span><span>Realistic</span><span>Hard</span></div>
+      </div>
+      <div class="control-group">
+        <label>Decline Rate — <span id="decline-val">0.010</span>/day</label>
+        <input type="range" id="decline-slider" min="0" max="0.05" step="0.005" value="0.01">
+        <div class="range-labels"><span>Stable</span><span>Slow drift</span><span>Fast</span></div>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-primary" id="start-btn" onclick="startEpisode()">
+        <span class="spinner"></span>
+        <span class="btn-text">▶ Start Episode</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- EPISODE CARD -->
+  <div class="card reveal" id="episode-card" style="display:none;">
+    <div class="card-title">Patient Monitoring</div>
+    <div class="card-sub" id="patient-label">Patient — Stage 2 Mild · Seed 0</div>
+
+    <div id="step-error" class="error-toast"></div>
+
+    <div class="step-counter">Day <span id="day-num">1</span> of 30</div>
+    <div class="timeline-wrap">
+      <div class="timeline" id="timeline"></div>
+      <div class="timeline-labels" id="timeline-labels"></div>
+    </div>
+    <div class="legend" style="margin-bottom:16px;">
+      <div class="legend-item"><div class="legend-dot" style="background:var(--purple)"></div> Current day</div>
+      <div class="legend-item"><div class="legend-dot" style="background:rgba(123,94,167,0.15); border:1px solid rgba(123,94,167,0.3)"></div> Future</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--pink)"></div> Alert raised</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#E05050"></div> Escalated</div>
+    </div>
+
+    <div class="anomaly-banner" id="anomaly-banner">
+      <div class="anomaly-dot"></div>
+      Anomaly event active — acute deterioration detected in sensor signals
+    </div>
+
+    <div class="sensors-grid" id="sensors-grid"></div>
+
+    <div class="score-section">
+      <div class="score-header">
+        <div class="score-label">Episode Score</div>
+        <div class="score-number" id="score-num">0.0000</div>
+      </div>
+      <div class="score-track"><div class="score-fill" id="score-fill" style="width:0%"></div></div>
+    </div>
+
+    <div class="reward-display" id="reward-display">
+      <div class="reward-val" id="reward-val">—</div>
+      <div class="reward-reason" id="reward-reason">Choose an action below to step forward</div>
+    </div>
+
+    <div id="action-area">
+      <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-muted);margin-bottom:10px;">Choose action for Day <span id="action-day">1</span></div>
+      <div class="action-grid">
+        <button class="action-btn action-0" id="act0" onclick="takeAction(0)">
+          <span class="action-label">0 · Do Nothing</span>
+          <span class="action-desc">Patient appears stable</span>
+        </button>
+        <button class="action-btn action-1" id="act1" onclick="takeAction(1)">
+          <span class="action-label">1 · Soft Alert</span>
+          <span class="action-desc">Minor concern, flag for review</span>
+        </button>
+        <button class="action-btn action-2" id="act2" onclick="takeAction(2)">
+          <span class="action-label">2 · Medium Alert</span>
+          <span class="action-desc">Notable deterioration</span>
+        </button>
+        <button class="action-btn action-3" id="act3" onclick="takeAction(3)">
+          <span class="action-label">3 · Escalate</span>
+          <span class="action-desc">Acute event, intervene now</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="done-overlay" id="done-overlay">
+      <div class="done-title">Episode Complete</div>
+      <p style="color:var(--text-muted);font-size:14px;margin-bottom:4px;">30 days monitored</p>
+      <div class="done-scores" id="done-scores"></div>
+      <button class="btn btn-primary" onclick="resetEpisode()" style="margin:0 auto;max-width:220px;display:flex;">
+        ↺ New Episode
+      </button>
+    </div>
+
+    <div class="btn-row" style="margin-top:14px;">
+      <button class="btn btn-ghost" id="auto-btn" onclick="toggleAuto()">⚡ Auto-play</button>
+      <button class="btn btn-ghost" onclick="resetEpisode()">↺ Reset</button>
+    </div>
+  </div>
+
+  <!-- INFO CARD -->
+  <div class="card reveal">
+    <div class="card-title">How It Works</div>
+    <div class="card-sub">CogTraceEnv is an OpenEnv-compliant RL training environment</div>
+    <div class="info-grid">
+      <div class="info-item">
+        <div class="info-icon">🧠</div>
+        <div class="info-title">Synthetic Patient</div>
+        <div class="info-text">Rule-based simulator generates realistic behavioral signals derived from published CDR-scale research. No real patient data used.</div>
+      </div>
+      <div class="info-item">
+        <div class="info-icon">📊</div>
+        <div class="info-title">5 Sensor Streams</div>
+        <div class="info-text">Typing delay, sleep hours, routine adherence, speech pauses, and memory lapses — each with stage-calibrated noise.</div>
+      </div>
+      <div class="info-item">
+        <div class="info-icon">⚡</div>
+        <div class="info-title">Dense Rewards</div>
+        <div class="info-text">Agent receives a reward every step. Missing a critical event costs −1.0. Correct restraint earns +0.10. Proportionate alerting encouraged.</div>
+      </div>
+      <div class="info-item">
+        <div class="info-icon">🎯</div>
+        <div class="info-title">3 Graded Tasks</div>
+        <div class="info-text">Easy: stage classification. Medium: anomaly timing detection. Hard: full 30-step triage with F1 scoring.</div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    CogTrace Env ·
+    <a href="https://github.com/hasini-m06/Alzheimers" target="_blank">View on GitHub</a>
+  </footer>
+
+</div>
+
+<script>
+// ── API CONFIG ───────────────────────────────────────────────────────────────
+// Auto-detect backend URL:
+// - If served by FastAPI on port 7860 (local or HF Spaces), use same origin
+// - If opened as a local file (file://) or any other port, point to localhost:7860
+const _isServedByFastAPI = window.location.protocol !== 'file:' && window.location.port === '7860';
+const _isHFSpace = window.location.hostname.endsWith('.hf.space') || window.location.port === '';
+const API_BASE = (_isServedByFastAPI || (_isHFSpace && window.location.protocol !== 'file:'))
+  ? ''  // same origin — FastAPI is serving this page
+  : 'http://localhost:7860';
+
+async function apiFetch(path, options = {}) {
+  const res = await fetch(API_BASE + path, {
+    headers: { 'Content-Type': 'application/json' },
+    ...options,
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: res.statusText }));
+    throw new Error(err.detail || res.statusText);
+  }
+  return res.json();
+}
+
+// ── STATE ────────────────────────────────────────────────────────────────────
+let currentStep = 0;
+let done = false;
+let cumReward = 0;
+let alertHistory = [];
+let tp=0, fp=0, fn=0, tn=0;
+let lastObs = null;
+let lastInfo = null;
+let autoTimer = null;
+let isAuto = false;
+let isLoading = false;
+
+// ── SENSORS CONFIG ───────────────────────────────────────────────────────────
+const SENSORS = [
+  { key:'typing_delay_delta', icon:'⌨️', name:'Typing Delay', unit:'Δz', lo:-1, hi:3, bad:'high' },
+  { key:'sleep_hours',        icon:'😴', name:'Sleep',        unit:'hrs', lo:0, hi:10, bad:'low' },
+  { key:'routine_adherence_score', icon:'📅', name:'Routine', unit:'score', lo:0, hi:1, bad:'low' },
+  { key:'speech_pause_freq',  icon:'🗣️', name:'Speech Pauses', unit:'/min', lo:0, hi:8, bad:'high' },
+  { key:'memory_lapse_count', icon:'🧩', name:'Memory Lapses', unit:'events', lo:0, hi:10, bad:'high' },
+];
+
+function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+
+// ── ERROR DISPLAY ────────────────────────────────────────────────────────────
+function showError(id, msg) {
+  const el = document.getElementById(id);
+  el.textContent = '⚠ ' + msg;
+  el.classList.add('visible');
+  setTimeout(() => el.classList.remove('visible'), 6000);
+}
+
+// ── TIMELINE ─────────────────────────────────────────────────────────────────
+function initTimeline() {
+  const tl = document.getElementById('timeline');
+  const lbl = document.getElementById('timeline-labels');
+  tl.innerHTML = ''; lbl.innerHTML = '';
+  for (let i = 0; i < 30; i++) {
+    const dot = document.createElement('div');
+    dot.className = 'day-dot';
+    dot.id = `dot-${i}`;
+    dot.title = `Day ${i+1}`;
+    dot.textContent = i+1;
+    tl.appendChild(dot);
+    const l = document.createElement('div');
+    l.className = 'day-label';
+    l.textContent = (i+1) % 5 === 0 ? i+1 : '';
+    lbl.appendChild(l);
+  }
+}
+
+function updateTimeline() {
+  for (let i = 0; i < 30; i++) {
+    const dot = document.getElementById(`dot-${i}`);
+    dot.className = 'day-dot';
+    if (i < currentStep) dot.classList.add('done');
+    if (i === currentStep && !done) dot.classList.add('current');
+    const a = alertHistory[i];
+    if (a === 3) dot.classList.add('action-escalate');
+    else if (a >= 1) dot.classList.add('action-alert');
+  }
+  const cur = document.getElementById(`dot-${currentStep}`);
+  if (cur) cur.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+}
+
+// ── SENSORS ──────────────────────────────────────────────────────────────────
+function initSensors() {
+  const grid = document.getElementById('sensors-grid');
+  grid.innerHTML = '';
+  SENSORS.forEach(s => {
+    const el = document.createElement('div');
+    el.className = 'sensor';
+    el.id = `sensor-${s.key}`;
+    el.innerHTML = `
+      <div class="sensor-icon">${s.icon}</div>
+      <div class="sensor-name">${s.name}</div>
+      <div><span class="sensor-value" id="sv-${s.key}">—</span> <span class="sensor-unit">${s.unit}</span></div>
+      <div class="sensor-bar-track"><div class="sensor-bar-fill" id="sb-${s.key}" style="width:0%;background:var(--purple-light)"></div></div>
+    `;
+    grid.appendChild(el);
+  });
+}
+
+function updateSensors(obs, prevAnomalyActive) {
+  SENSORS.forEach(s => {
+    const val = obs[s.key];
+    const el = document.getElementById(`sensor-${s.key}`);
+    document.getElementById(`sv-${s.key}`).textContent =
+      typeof val === 'number' && !Number.isInteger(val) ? val.toFixed(2) : val;
+
+    const range = s.hi - s.lo;
+    const pct = clamp((val - s.lo) / range * 100, 0, 100);
+    const fill = document.getElementById(`sb-${s.key}`);
+    const badness = s.bad === 'high' ? pct/100 : 1 - pct/100;
+    const r1=[107,174,214], r2=[232,160,191];
+    const r=Math.round(r1[0]+(r2[0]-r1[0])*badness);
+    const g=Math.round(r1[1]+(r2[1]-r1[1])*badness);
+    const b=Math.round(r1[2]+(r2[2]-r1[2])*badness);
+    fill.style.width = pct + '%';
+    fill.style.background = `rgb(${r},${g},${b})`;
+  });
+}
+
+// ── RENDER STEP ───────────────────────────────────────────────────────────────
+function renderStep(obs, info) {
+  document.getElementById('day-num').textContent = (obs.days_elapsed + 1);
+  document.getElementById('action-day').textContent = (obs.days_elapsed + 1);
+
+  updateTimeline();
+  updateSensors(obs);
+
+  const epScore = Math.max(0, Math.min(1, info.episode_score_so_far));
+  document.getElementById('score-num').textContent = epScore.toFixed(4);
+  document.getElementById('score-fill').style.width = (epScore * 100) + '%';
+
+  // Show anomaly banner only after anomaly has been active at least 1 step
+  const showAnomaly = info.anomaly_active && obs.days_elapsed > 0;
+  document.getElementById('anomaly-banner').classList.toggle('visible', showAnomaly);
+
+  setActionsEnabled(!done);
+}
+
+function setActionsEnabled(enabled) {
+  [0,1,2,3].forEach(i => {
+    document.getElementById(`act${i}`).disabled = !enabled || isLoading;
+  });
+}
+
+// ── START EPISODE ─────────────────────────────────────────────────────────────
+async function startEpisode() {
+  if (isLoading) return;
+  isLoading = true;
+  const btn = document.getElementById('start-btn');
+  btn.classList.add('loading');
+  btn.disabled = true;
+
+  const stage   = parseInt(document.getElementById('stage-select').value);
+  const seed    = parseInt(document.getElementById('seed-select').value);
+  const noise   = parseFloat(document.getElementById('noise-slider').value);
+  const decline = parseFloat(document.getElementById('decline-slider').value);
+
+  try {
+    const obs = await apiFetch('/reset', {
+      method: 'POST',
+      body: JSON.stringify({
+        true_stage: stage,
+        seed: seed,
+        noise_level: noise,
+        decline_rate: decline,
+        episode_length: 30,
+      }),
+    });
+
+    currentStep = 0; done = false; cumReward = 0; alertHistory = [];
+    tp=0; fp=0; fn=0; tn=0; lastObs = obs;
+    lastInfo = { anomaly_active: false, episode_score_so_far: 0.0, step: 0, max_steps: 30 };
+
+    const stageNames = ['Healthy','Very Mild','Mild','Moderate','Severe'];
+    document.getElementById('patient-label').textContent =
+      `Patient — Stage ${stage} ${stageNames[stage]} · Seed ${seed} · Noise ${noise}×`;
+
+    document.getElementById('setup-card').style.display = 'none';
+    document.getElementById('episode-card').style.display = 'block';
+    document.getElementById('done-overlay').classList.remove('visible');
+    document.getElementById('action-area').style.display = 'block';
+    document.getElementById('reward-val').textContent = '—';
+    document.getElementById('reward-reason').textContent = 'Choose an action below to step forward';
+    document.getElementById('reward-display').className = 'reward-display';
+
+    initTimeline();
+    initSensors();
+    renderStep(obs, lastInfo);
+  } catch(e) {
+    showError('error-toast', 'Could not connect to backend: ' + e.message);
+  } finally {
+    isLoading = false;
+    btn.classList.remove('loading');
+    btn.disabled = false;
+  }
+}
+
+// ── TAKE ACTION ───────────────────────────────────────────────────────────────
+async function takeAction(action) {
+  if (done || isLoading) return;
+  isLoading = true;
+  setActionsEnabled(false);
+
+  try {
+    const result = await apiFetch('/step', {
+      method: 'POST',
+      body: JSON.stringify({ action }),
+    });
+
+    const obs    = result.observation;
+    const reward = result.reward;
+    const isDone = result.done;
+    const info   = result.info;
+
+    // Update counters
+    const alerted = action > 0;
+    if (alerted && info.anomaly_active) tp++;
+    else if (alerted && !info.anomaly_active) fp++;
+    else if (!alerted && info.anomaly_active) fn++;
+    else tn++;
+
+    cumReward += reward.value;
+    alertHistory[currentStep] = action;
+
+    // Update timeline dot
+    const dot = document.getElementById(`dot-${currentStep}`);
+    if (action === 3) dot.classList.add('action-escalate');
+    else if (action >= 1) dot.classList.add('action-alert');
+    dot.classList.remove('current');
+    dot.classList.add('done');
+
+    currentStep++;
+    lastObs = obs;
+    lastInfo = info;
+
+    // Show reward
+    const rv = document.getElementById('reward-val');
+    const rr = document.getElementById('reward-reason');
+    const rd = document.getElementById('reward-display');
+    rv.textContent = (reward.value >= 0 ? '+' : '') + reward.value.toFixed(2);
+    rv.className = 'reward-val ' + (reward.value >= 0 ? 'pos' : 'neg');
+    rr.textContent = reward.reason + (info.anomaly_active ? ' (anomaly active)' : ' (no anomaly)');
+    rd.className = 'reward-display ' + (reward.value >= 0 ? 'positive' : 'negative');
+
+    if (isDone) {
+      done = true;
+      showDone(info);
+    } else {
+      renderStep(obs, info);
+    }
+  } catch(e) {
+    showError('step-error', 'Step failed: ' + e.message);
+  } finally {
+    isLoading = false;
+    if (!done) setActionsEnabled(true);
+  }
+}
+
+function showDone(info) {
+  document.getElementById('action-area').style.display = 'none';
+  document.getElementById('done-overlay').classList.add('visible');
+
+  const precision = tp + fp > 0 ? tp/(tp+fp) : 0;
+  const recall    = tp + fn > 0 ? tp/(tp+fn) : 0;
+  const f1        = precision + recall > 0 ? 2*precision*recall/(precision+recall) : 0;
+  const epScore   = Math.max(0, Math.min(1, info.episode_score_so_far));
+
+  document.getElementById('done-scores').innerHTML = `
+    <div class="done-score-item">
+      <div class="done-score-val">${f1.toFixed(3)}</div>
+      <div class="done-score-lbl">F1 Score</div>
+    </div>
+    <div class="done-score-item">
+      <div class="done-score-val">${epScore.toFixed(3)}</div>
+      <div class="done-score-lbl">Episode Score</div>
+    </div>
+    <div class="done-score-item">
+      <div class="done-score-val">${tp}</div>
+      <div class="done-score-lbl">True Positives</div>
+    </div>
+    <div class="done-score-item">
+      <div class="done-score-val">${fp}</div>
+      <div class="done-score-lbl">False Alarms</div>
+    </div>
+    <div class="done-score-item">
+      <div class="done-score-val">${fn}</div>
+      <div class="done-score-lbl">Missed Events</div>
+    </div>
+  `;
+
+  if (autoTimer) { clearInterval(autoTimer); autoTimer = null; isAuto = false; }
+  document.getElementById('auto-btn').textContent = '⚡ Auto-play';
+}
+
+function resetEpisode() {
+  if (autoTimer) { clearInterval(autoTimer); autoTimer = null; isAuto = false; }
+  document.getElementById('auto-btn').textContent = '⚡ Auto-play';
+  document.getElementById('setup-card').style.display = 'block';
+  document.getElementById('episode-card').style.display = 'none';
+  done = false;
+}
+
+// ── AUTO-PLAY (heuristic agent) ──────────────────────────────────────────────
+function autoStep() {
+  if (!lastObs || done) { toggleAuto(); return; }
+  const obs = lastObs;
+  let action = 0;
+  const badSigns = (obs.routine_adherence_score < 0.5 ? 1 : 0)
+                 + (obs.memory_lapse_count > 3 ? 1 : 0)
+                 + (obs.sleep_hours < 5.5 ? 1 : 0);
+  if (badSigns >= 3) action = 3;
+  else if (badSigns === 2) action = 2;
+  else if (badSigns === 1) action = 1;
+  takeAction(action);
+}
+
+function toggleAuto() {
+  if (done || !lastObs) return;
+  isAuto = !isAuto;
+  document.getElementById('auto-btn').textContent = isAuto ? '⏸ Pause' : '⚡ Auto-play';
+  if (isAuto) {
+    autoTimer = setInterval(autoStep, 700);
+  } else {
+    clearInterval(autoTimer); autoTimer = null;
+  }
+}
+
+// ── RANGE SLIDERS ─────────────────────────────────────────────────────────────
+document.getElementById('noise-slider').addEventListener('input', function() {
+  document.getElementById('noise-val').textContent = parseFloat(this.value).toFixed(1);
+});
+document.getElementById('decline-slider').addEventListener('input', function() {
+  document.getElementById('decline-val').textContent = parseFloat(this.value).toFixed(3);
+});
+</script>
+</body>
+</html>

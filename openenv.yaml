@@ -1,0 +1,120 @@
+openenv_version: "1.0"
+env_id: "CogTraceEnv-v1"
+name: "CogTrace — Alzheimer's Cognitive Monitoring Environment"
+version: "1.0.0"
+description: >
+  A real-world OpenEnv environment where an AI agent monitors a simulated
+  patient's daily behavioral signals and must decide when and how to raise
+  clinical alerts. Models the genuine healthcare challenge of early Alzheimer's
+  detection through passive behavioral monitoring (typing patterns, sleep,
+  routine adherence, speech pauses, memory lapses).
+
+author: "CogTraceEnv Contributors"
+license: "Apache-2.0"
+tags:
+  - healthcare
+  - alzheimers
+  - monitoring
+  - time-series
+  - clinical-ai
+
+observation_space:
+  type: dict
+  fields:
+    typing_delay_delta:
+      type: float
+      description: "Change in typing latency vs personal baseline (z-score)"
+    sleep_hours:
+      type: float
+      range: [0.0, 24.0]
+      description: "Hours of sleep last night"
+    routine_adherence_score:
+      type: float
+      range: [0.0, 1.0]
+      description: "Fraction of daily routine steps completed on time"
+    speech_pause_freq:
+      type: float
+      range: [0.0, inf]
+      description: "Average pause frequency during speech (pauses/min)"
+    memory_lapse_count:
+      type: int
+      range: [0, 20]
+      description: "Observed memory-lapse events today"
+    days_elapsed:
+      type: int
+      range: [0, 30]
+      description: "Days since episode start"
+    trend_typing_delay:
+      type: float
+      description: "7-day slope of typing_delay_delta"
+    trend_sleep:
+      type: float
+      description: "7-day slope of sleep_hours"
+    trend_routine:
+      type: float
+      description: "7-day slope of routine_adherence_score"
+    alerts_last_7_days:
+      type: int
+      range: [0, 7]
+      description: "Number of alerts the agent raised in the last 7 days"
+
+action_space:
+  type: discrete
+  n: 4
+  actions:
+    0: "do_nothing — observe and continue monitoring"
+    1: "soft_alert — flag for non-urgent review"
+    2: "medium_alert — schedule clinical check within 48h"
+    3: "escalate — immediate clinical intervention"
+
+reward:
+  type: float
+  range: [-1.0, 1.0]
+  description: >
+    Correct escalation during anomaly: +1.0
+    Proportional partial credit for lower alerts: +0.3 to +0.6
+    Missed anomaly (do nothing while critical): -1.0
+    False alert (any alert when stable): -0.1 to -0.5
+    Alert spam penalty (4+ alerts in 7 days): -0.15
+
+tasks:
+  - id: task1_easy
+    name: "Cognitive Stage Classification"
+    difficulty: easy
+    description: >
+      Single-step snapshot task. Agent receives one observation and must
+      output the patient's CDR stage (0–4). Graded by proximity to true stage.
+    grader: tasks/task1_easy.py::grade
+    max_score: 1.0
+
+  - id: task2_medium
+    name: "Anomaly Timing Detection"
+    difficulty: medium
+    description: >
+      7-step time series task. Agent must raise its first alert as close
+      as possible to the true anomaly onset day. Continuous timing score.
+    grader: tasks/task2_medium.py::grade
+    max_score: 1.0
+
+  - id: task3_hard
+    name: "Full Triage Episode"
+    difficulty: hard
+    description: >
+      30-step episode with gradual decline and one acute anomaly window.
+      Agent scored on F1 (sensitivity + specificity) and alert proportionality.
+      Penalises both over-alerting and missed detections.
+    grader: tasks/task3_hard.py::grade
+    max_score: 1.0
+
+episode:
+  max_steps: 30
+  reset_on_done: true
+
+api:
+  endpoints:
+    - POST /reset
+    - POST /step
+    - GET  /state
+    - GET  /tasks
+    - GET  /health
+    - GET  /openenv.yaml

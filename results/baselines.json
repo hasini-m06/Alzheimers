@@ -1,0 +1,29 @@
+{
+  "oracle": {
+    "task1": 0.6400,
+    "task2": 0.6750,
+    "task3": 0.3350,
+    "mean":  0.5500,
+    "note": "Rule-based oracle is optimised for Task 3 triage; Task 1 stage prediction uses action-space heuristics which under-fit extreme stages."
+  },
+  "random": {
+    "task1": 0.5200,
+    "task2": 0.3750,
+    "task3": 0.3343,
+    "mean":  0.4098
+  },
+  "always_alert": {
+    "task1": 0.4400,
+    "task2": 0.3250,
+    "task3": 0.5000,
+    "mean":  0.4217,
+    "note": "Always-alert achieves 0.50 on Task 3 because it catches all anomalies (TP=5) but accumulates heavy FP penalties."
+  },
+  "dqn": {
+    "task1": 0.9000,
+    "task2": 0.2000,
+    "task3": 0.9210,
+    "mean":  0.6737,
+    "note": "DQN trained on Task 3 episodes (1500 eps). Strong on Task 1 via observation-space heuristics. Weak on Task 2 (7-step format not seen during training)."
+  }
+}

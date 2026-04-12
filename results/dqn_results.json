@@ -1,0 +1,52 @@
+{
+  "agent": "DQN (PyTorch, trained 1500 episodes)",
+  "task1": 0.9000,
+  "task2": 0.2000,
+  "task3": 0.9210,
+  "mean": 0.6737,
+  "training": {
+    "episodes": 1500,
+    "architecture": "MLP 10->128->128->4",
+    "optimizer": "Adam lr=1e-3",
+    "gamma": 0.95,
+    "epsilon_start": 1.0,
+    "epsilon_end": 0.05,
+    "epsilon_decay": 0.995,
+    "batch_size": 64,
+    "buffer_capacity": 10000,
+    "target_update_steps": 100
+  },
+  "per_seed": {
+    "task1": [
+      {"seed": 0, "true_stage": 0, "predicted_stage": 0, "score": 1.00},
+      {"seed": 1, "true_stage": 1, "predicted_stage": 1, "score": 1.00},
+      {"seed": 2, "true_stage": 2, "predicted_stage": 2, "score": 1.00},
+      {"seed": 3, "true_stage": 3, "predicted_stage": 4, "score": 0.50},
+      {"seed": 4, "true_stage": 4, "predicted_stage": 4, "score": 1.00},
+      {"seed": 5, "true_stage": 0, "predicted_stage": 0, "score": 1.00},
+      {"seed": 6, "true_stage": 1, "predicted_stage": 1, "score": 1.00},
+      {"seed": 7, "true_stage": 2, "predicted_stage": 2, "score": 1.00},
+      {"seed": 8, "true_stage": 3, "predicted_stage": 2, "score": 0.50},
+      {"seed": 9, "true_stage": 4, "predicted_stage": 4, "score": 1.00}
+    ],
+    "task2": [
+      {"seed": 0, "anomaly_day": 3, "first_alert_day": -1, "score": 0.00},
+      {"seed": 1, "anomaly_day": 2, "first_alert_day":  0, "score": 0.50},
+      {"seed": 2, "anomaly_day": 3, "first_alert_day":  0, "score": 0.25},
+      {"seed": 3, "anomaly_day": 3, "first_alert_day": -1, "score": 0.00},
+      {"seed": 4, "anomaly_day": 3, "first_alert_day":  0, "score": 0.25},
+      {"seed": 5, "anomaly_day": 3, "first_alert_day":  4, "score": 0.75},
+      {"seed": 6, "anomaly_day": 2, "first_alert_day": -1, "score": 0.00},
+      {"seed": 7, "anomaly_day": 3, "first_alert_day":  0, "score": 0.25},
+      {"seed": 8, "anomaly_day": 3, "first_alert_day": -1, "score": 0.00},
+      {"seed": 9, "anomaly_day": 2, "first_alert_day": -1, "score": 0.00}
+    ],
+    "task3": [
+      {"seed": 0, "tp": 5, "fp": 0, "fn": 0, "f1_score": 1.00, "score": 1.00},
+      {"seed": 1, "tp": 5, "fp": 2, "fn": 0, "f1_score": 0.83, "score": 0.88},
+      {"seed": 2, "tp": 5, "fp": 3, "fn": 0, "f1_score": 0.77, "score": 0.84},
+      {"seed": 3, "tp": 5, "fp": 2, "fn": 0, "f1_score": 0.83, "score": 0.88},
+      {"seed": 4, "tp": 5, "fp": 0, "fn": 0, "f1_score": 1.00, "score": 1.00}
+    ]
+  }
+}
