@@ -56,6 +56,21 @@ class StepRequest(BaseModel):
 def health():
     return {"status": "ok", "env": "CogTraceEnv-v1"}
 
+@app.get("/")
+def root():
+    return {
+        "name": "CogTraceEnv",
+        "description": "OpenEnv RL environment for Alzheimer's cognitive monitoring",
+        "version": "1.0.0",
+        "endpoints": {
+            "health": "/health",
+            "reset": "/reset",
+            "step": "/step",
+            "state": "/state",
+            "tasks": "/tasks",
+            "spec": "/openenv.yaml"
+        }
+    }
 
 @app.post("/reset")
 def reset(req: ResetRequest = ResetRequest()):
